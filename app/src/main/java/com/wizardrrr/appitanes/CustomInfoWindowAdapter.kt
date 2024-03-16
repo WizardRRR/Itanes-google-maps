@@ -18,10 +18,11 @@ class CustomInfoWindowAdapter(private val context: Context) : InfoWindowAdapter{
         val titleTextView = view.findViewById<TextView>(R.id.tvTitleModalMap)
         val imgEstablishment = view.findViewById<ImageView>(R.id.imgEstablishment)
         titleTextView.text = marker.title
-        when(marker.title) {
-            "Establecimiento 1"-> imgEstablishment.setImageResource(R.drawable.establishment_1)
-            "Establecimiento 2"-> imgEstablishment.setImageResource(R.drawable.establishment_2)
-            "Establecimiento 3"-> imgEstablishment.setImageResource(R.drawable.establishment_3)
+
+        locations.forEach { location->
+            if (location.title == marker.title) {
+                imgEstablishment.setImageResource(location.srcImage)
+            }
         }
 
         return view

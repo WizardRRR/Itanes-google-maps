@@ -2,6 +2,7 @@ package com.wizardrrr.appitanes
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -17,15 +18,11 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 
-data class Location(val title: String, val latLng: LatLng)
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
+    private lateinit var tvAppTitle: TextView
+    private lateinit var tvAppDescription: TextView
     private var centerMap: LatLng = LatLng(-12.070346982810078, -77.07014311390193)
-    private var locations = mutableListOf<Location>(
-        Location("Establecimiento 1", LatLng(-12.07216539986152, -77.07015007517734)),
-        Location("Establecimiento 2", LatLng(-12.068500340426482, -77.07117932022452)),
-        Location("Establecimiento 3", LatLng(-12.069583055580594, -77.06851076007389))
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,14 +34,21 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             insets
         }
 
+        onInitComponents()
+    }
+
+    private fun onInitComponents() {
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        tvAppTitle = findViewById(R.id.tvAppTitle)
+        tvAppDescription = findViewById(R.id.tvAppDescription)
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
 
+        // add markers
         locations.forEach { location ->
             googleMap.addMarker(
                 MarkerOptions()
@@ -54,6 +58,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             )
         }
 
+        // animation camera
         val cameraPosition = CameraPosition.Builder()
             .target(centerMap)
             .zoom(17f)
@@ -63,14 +68,29 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
 
+        // event click markers
         googleMap.setOnMarkerClickListener { marker ->
             googleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(marker.position, 17f))
             googleMap.setInfoWindowAdapter(CustomInfoWindowAdapter(this))
             marker.showInfoWindow()
+
+            locations.forEach { location ->
+                if (location.title == marker.title) {
+                    tvAppTitle.text = location.title
+                    tvAppDescription.text = location.description
+                }
+            }
             Log.i("marker", "${marker.title}")
             true
         }
 
+        // event click map
+        googleMap.setOnMapClickListener {
+            tvAppTitle.text = "Itanes App"
+            tvAppDescription.text = "By WizardRRR"
+        }
+
+        // controls for map
         googleMap.uiSettings.isZoomControlsEnabled = true
     }
 
