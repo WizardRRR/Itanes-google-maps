@@ -22,7 +22,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var tvAppTitle: TextView
     private lateinit var tvAppDescription: TextView
-    private var centerMap: LatLng = LatLng(-12.070346982810078, -77.07014311390193)
+    private var centerMap: LatLng = LatLng(-12.125717562216492, -77.03234292655931)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,7 +80,6 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
                     tvAppDescription.text = location.description
                 }
             }
-            Log.i("marker", "${marker.title}")
             true
         }
 
