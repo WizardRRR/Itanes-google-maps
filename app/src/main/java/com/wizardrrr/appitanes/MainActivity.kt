@@ -1,5 +1,6 @@
 package com.wizardrrr.appitanes
 
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.widget.TextView
@@ -9,14 +10,19 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.InfoWindowAdapter
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.PolylineOptions
+import com.wizardrrr.appitanes.BuildConfig.OPEN_ROUTE_SERVICE_API_KEY
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -91,6 +97,47 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // controls for map
         googleMap.uiSettings.isZoomControlsEnabled = true
+
+        // trazando las rutas
+        createRoute(googleMap, locations[0].latLng, locations[2].latLng, Color.YELLOW)
+        createRoute(googleMap, locations[0].latLng, locations[4].latLng, Color.RED)
+        createRoute(googleMap, locations[4].latLng, locations[3].latLng, Color.GREEN)
+        createRoute(googleMap, locations[3].latLng, locations[1].latLng, Color.BLACK)
+        createRoute(googleMap, locations[1].latLng, locations[2].latLng, Color.CYAN)
     }
 
+    private fun getRetrofit(): Retrofit {
+        return Retrofit.Builder()
+            .baseUrl("https://api.openrouteservice.org/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+
+    private fun createRoute(googleMap: GoogleMap, start: LatLng, end: LatLng, color: Int) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val call = getRetrofit()
+                .create(ApiService::class.java)
+                .getRoute(
+                    OPEN_ROUTE_SERVICE_API_KEY,
+                    "${start.longitude},${start.latitude}",
+                    "${end.longitude},${end.latitude}"
+                )
+
+            if (call.isSuccessful) {
+                drawRoute(googleMap, call.body(), color)
+            } else {
+                Log.ERROR
+            }
+        }
+    }
+
+    private fun drawRoute(googleMap: GoogleMap, routeResponse: RouteResponse?, color: Int) {
+        val polylineOption = PolylineOptions().color(color).width(10f)
+        routeResponse?.features?.first()?.geometry?.coordinates?.forEach {
+            polylineOption.add(LatLng(it[1], it[0]))
+        }
+        runOnUiThread {
+            val poly = googleMap.addPolyline(polylineOption)
+        }
+    }
 }
